@@ -18,17 +18,31 @@ type Application struct {
 	words *trie.Trie
 }
 
+type config struct {
+	port      int
+	hotReload bool
+}
+
 type Template struct {
 	templates *template.Template
+	hotReload bool
 }
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
+	baseData := struct {
+		HotReload bool
+		Data      interface{}
+	}{
+		HotReload: t.hotReload,
+		Data:      data,
+	}
+	return t.templates.ExecuteTemplate(w, name, baseData)
 }
 
 func main() {
-	port := *flag.Int("port", 4000, "port to run web server")
-	reload := *flag.Bool("hot-reload", false, "hot reload browser")
+	cfg := config{}
+	flag.IntVar(&cfg.port, "port", 4000, "port to run web server")
+	flag.BoolVar(&cfg.hotReload, "hot-reload", false, "hot reload browser")
 	flag.Parse()
 
 	words, err := trie.NewFromFile("assets/words.txt")
@@ -39,6 +53,7 @@ func main() {
 
 	t := &Template{
 		templates: template.Must(template.ParseGlob("ui/html/*.html")),
+		hotReload: cfg.hotReload,
 	}
 
 	e := echo.New()
@@ -55,10 +70,10 @@ func main() {
 	e.Static("/static", "ui/static")
 	e.GET("/", app.home)
 
-	if reload {
+	if cfg.hotReload {
 		e.GET("/hot-reload", hotreload.HotReload)
 		e.GET("/hot-reload/ready", hotreload.TestAlive)
 	}
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cfg.port)))
 }
