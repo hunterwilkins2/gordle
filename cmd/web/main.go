@@ -1,16 +1,20 @@
 package main
 
 import (
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"html/template"
 	"io"
 	"os"
 
+	"github.com/gorilla/sessions"
 	"github.com/hunterwilkins2/gordle/internal/hotreload"
 	"github.com/hunterwilkins2/gordle/pkg/trie"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
 type Application struct {
@@ -51,8 +55,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	funcMap := template.FuncMap{
+		"loop": func(from, to int) <-chan int {
+			ch := make(chan int)
+			go func() {
+				for i := from; i < to; i++ {
+					ch <- i
+				}
+				close(ch)
+			}()
+			return ch
+		},
+	}
 	t := &Template{
-		templates: template.Must(template.ParseGlob("ui/html/*.html")),
+		templates: template.Must(template.New("index").Funcs(funcMap).ParseGlob("ui/html/*.html")),
 		hotReload: cfg.hotReload,
 	}
 
@@ -66,9 +82,16 @@ func main() {
 	}
 
 	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
+	gob.Register([]guess{})
+	gob.Register(map[string]bool{})
 
+	e.Logger.SetLevel(log.DEBUG)
 	e.Static("/static", "ui/static")
 	e.GET("/", app.home)
+	e.POST("/guess", app.guess)
+	e.GET("/reset", app.reset)
 
 	if cfg.hotReload {
 		e.GET("/hot-reload", hotreload.HotReload)

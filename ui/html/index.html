@@ -4,11 +4,104 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@500&family=Patua+One&display=swap" rel="stylesheet"> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
   <title>Gordle</title>
   <link rel="stylesheet" href="../static/css/dist/output.css">
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="shortcut icon" href="../static/img/favicon.ico" type="image/x-icon">
 </head>
-<body>
+<body class="bg-zinc-900 font-inconsolata">
+  
+  {{block "gordle" .}}
+  <div id="gordle" class="flex flex-col justify-center items-center">
+    <h1 class="font-patua-one text-white text-5xl my-5">Gordle</h1>
+
+    <div class="grid grid-rows-6 gap-1">
+      {{range .Data.Guesses}}
+      <div class="grid grid-cols-5 gap-1">
+        {{range .Letters}}
+          {{if eq .Result 0}}
+            <p class="bg-green-600 w-16 h-16 text-white text-4xl text-center leading-[3.5rem]">{{.Char}}</p>
+          {{else if eq .Result 1}}
+            <p class="bg-yellow-500 w-16 h-16 text-white text-4xl text-center leading-[3.5rem]">{{.Char}}</p>
+          {{else}}
+            <p class="bg-zinc-800 w-16 h-16 text-white text-4xl text-center leading-[3.5rem]">{{.Char}}</p>
+          {{end}}
+        {{end}}
+      </div>
+      {{end}}
+      {{$length := len .Data.Guesses}}
+      {{range $x := loop $length 6}}
+      <div {{if eq $x $length}}id="current"{{end}} class="grid grid-cols-5 gap-1">
+        <p class="border-zinc-600 border-2 w-16 h-16 text-white text-4xl text-center leading-[3.5rem]"></p>
+        <p class="border-zinc-600 border-2 w-16 h-16 text-white text-4xl text-center leading-[3.5rem]"></p>
+        <p class="border-zinc-600 border-2 w-16 h-16 text-white text-4xl text-center leading-[3.5rem]"></p>
+        <p class="border-zinc-600 border-2 w-16 h-16 text-white text-4xl text-center leading-[3.5rem]"></p>
+        <p class="border-zinc-600 border-2 w-16 h-16 text-white text-4xl text-center leading-[3.5rem]"></p>
+      </div>
+      {{end}}
+    </div>
+
+    {{if ne .Data.Error ""}}
+      <p id="error" class="text-2xl text-red-500 mt-3 transition-opacity">{{.Data.Error}}</p>
+    {{end}}
+
+    {{if .Data.GameOver}}
+      <div id="gameover" class="flex justify-between items-center mt-3">
+       {{if .Data.DidWin}}
+          <p class="text-white text-xl mr-10">Congratulations. You Won!</p>
+        {{else}}
+          <p class="text-white text-xl mr-10">Too bad. Start a new game.</p>
+        {{end}}
+        <button onclick="reset()" class="bg-gray-500 text-xl text-white p-2 rounded-lg">New Game</button>
+      </div>
+    {{end}}
+
+    <div id="keyboard" class="{{if .Data.GameOver}}my-3{{else if eq .Data.Error ""}}my-16{{else}}my-6{{end}} flex flex-col items-center">
+      <div class="grid grid-cols-10 gap-2">
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "Q")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">Q</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "W")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">W</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "E")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">E</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "R")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">R</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "T")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">T</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "Y")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">Y</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "U")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">U</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "I")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">I</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "O")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">O</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "P")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">P</button>
+      </div>
+
+      <div class="grid grid-cols-9 gap-2 mt-2">
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "A")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">A</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "S")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">S</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "D")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">D</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "F")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">F</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "G")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">G</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "H")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">H</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "J")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">J</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "K")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">K</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "L")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">L</button>
+      </div>
+
+      <div class="grid grid-cols-9 gap-2 mt-2">
+        <button onclick="guess('ENTER')" class="bg-gray-500 text-white text-xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3"><i class="fa-solid fa-paragraph"></i></button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "Z")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">Z</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "X")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">X</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "C")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">C</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "V")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">V</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "B")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">B</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "N")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">N</button>
+        <button onclick="guess(this.innerHTML)" class="bg-gray-500 {{if (index .Data.Used "M")}}bg-gray-700{{end}} text-white text-3xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3">M</button>
+        <button onclick="guess('BACKSPACE')" class="bg-gray-500 text-white text-xl rounded-lg focus:outline-none focus:outline-zinc-600 py-2 px-1.5 md:py-3 md:px-3"><i class="fa-solid fa-delete-left"></i></button>
+      </div>
+    </div>
+  </div>
+  {{end}}
+
+  <script src="../static/js/gordle.js"></script>
   {{if .HotReload}}
     <script src="../static/js/hot-reload.js"></script>
   {{end}}

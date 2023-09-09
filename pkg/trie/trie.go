@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 	"strings"
@@ -77,11 +78,11 @@ func (t *Trie) getWordAtIndex(index int) string {
 		for c, n := range node.children {
 			if n != nil {
 				if current+n.childCount > index+1 {
-					word += string('a' + c)
+					word += fmt.Sprintf("%c", 'a'+c)
 					node = n
 					break
 				} else if current+n.childCount == index+1 {
-					word += string('a' + c)
+					word += fmt.Sprintf("%c", 'a'+c)
 					if n.wordEnds {
 						return word
 					}
